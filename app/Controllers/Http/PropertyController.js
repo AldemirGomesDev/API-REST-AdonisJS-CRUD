@@ -1,6 +1,6 @@
-'use strict'
+"use strict";
 
-const Property = use('App/Models/Property')
+const Property = use("App/Models/Property");
 
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
@@ -19,17 +19,19 @@ class PropertyController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ request, response, view }) {
+  async index({ request, response, view }) {
+    try {
+      const { latitude, longitude } = request.all();
 
-    const { latitude, longitude } = request.all()
+      const properties = await Property.query()
+        .with("images")
+        .nearBy(latitude, longitude, 10)
+        .fetch();
 
-    const properties = Property.query()
-      .with('images')
-      .nearBy(latitude, longitude, 10)
-      .fetch()
-
-    return properties
-
+      return properties;
+    } catch (error) {
+      return error;
+    }
   }
   /**
    * Create/save a new property.
@@ -39,19 +41,19 @@ class PropertyController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ auth, request, response }) {
-    const { id } = auth.user
+  async store({ auth, request, response }) {
+    const { id } = auth.user;
     const data = request.only([
-      'title',
-      'address',
-      'latitude',
-      'longitude',
-      'price'
-    ])
+      "title",
+      "address",
+      "latitude",
+      "longitude",
+      "price"
+    ]);
 
-    const property = await Property.create({ ...data, user_id: id })
+    const property = await Property.create({ ...data, user_id: id });
 
-return property
+    return property;
   }
 
   /**
@@ -63,12 +65,12 @@ return property
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params, request, response, view }) {
-    const property = await Property.findOrFail(params.id)
+  async show({ params, request, response, view }) {
+    const property = await Property.findOrFail(params.id);
 
-    await property.load('images')
+    await property.load("images");
 
-    return property
+    return property;
   }
   /**
    * Update property details.
@@ -78,22 +80,22 @@ return property
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params, request, response }) {
-    const property = await Property.findOrFail(params.id)
-  
+  async update({ params, request, response }) {
+    const property = await Property.findOrFail(params.id);
+
     const data = request.only([
-      'title',
-      'address',
-      'latitude',
-      'longitude',
-      'price'
-    ])
-  
-    property.merge(data)
-  
-    await property.save()
-  
-    return property
+      "title",
+      "address",
+      "latitude",
+      "longitude",
+      "price"
+    ]);
+
+    property.merge(data);
+
+    await property.save();
+
+    return property;
   }
 
   /**
@@ -104,15 +106,15 @@ return property
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy ({ params, request, response }) {
-    const property = await Property.findOrFail(params.id)
+  async destroy({ params, request, response }) {
+    const property = await Property.findOrFail(params.id);
 
     if (property.user_id !== auth.user.id) {
-      return response.status(401).send({ error: 'Not authorized' })
+      return response.status(401).send({ error: "Not authorized" });
     }
 
-    await property.delete()
-    }
+    await property.delete();
+  }
 }
 
-module.exports = PropertyController
+module.exports = PropertyController;
